@@ -12,12 +12,23 @@ import lombok.*;
 public class Usuario {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(
+        strategy = GenerationType.SEQUENCE,
+        generator = "usuario_seq"
+    )
+    @SequenceGenerator(
+        name = "usuario_seq",
+        sequenceName = "SEQ_USUARIO_SISTEMA",
+        allocationSize = 1
+    )
     @Column(name = "ID_USUARIO")
     private Long id;
 
     @Column(name = "NOMBRE", nullable = false)
     private String nombre;
+
+    @Column(name = "APELLIDO")
+    private String apellido;
 
     @Column(name = "EMAIL", nullable = false, unique = true)
     private String email;
@@ -28,6 +39,10 @@ public class Usuario {
     @Column(name = "ROL", nullable = false)
     private String rol;
 
+    @Column(name = "TELEFONO")
+    private String telefono;
+
     @Column(name = "ESTADO", nullable = false)
     private String estado;
 }
+

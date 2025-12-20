@@ -2,71 +2,97 @@ package com.duoc.usuarios.service;
 
 import com.duoc.usuarios.model.Usuario;
 import com.duoc.usuarios.repository.UsuarioRepository;
-import com.duoc.usuarios.service.UsuarioServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
+import org.mockito.*;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class UsuarioServiceImplTest {
-
-    @Mock
-    private UsuarioRepository usuarioRepository;
 
     @InjectMocks
     private UsuarioServiceImpl usuarioService;
 
-    @Test
-    void crearUsuario_ok() {
-        Usuario usuario = new Usuario();
-        usuario.setEmail("test@test.com");
+    @Mock
+    private UsuarioRepository usuarioRepository;
 
+    private Usuario usuario;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        usuario = new Usuario();
+        usuario.setId(1L);
+        usuario.setNombre("Rodrigo");
+        usuario.setApellido("Díaz");
+        usuario.setEmail("rodri@test.com");
+        usuario.setPassword("123456");
+        usuario.setRol(null);
+        usuario.setEstado(null);
+    }
+
+    @Test
+    void testCrearUsuarioAsignandoValoresPorDefecto() {
+        when(usuarioRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Usuario creado = usuarioService.crearUsuario(usuario);
+
+        assertEquals("ACTIVO", creado.getEstado());
+        assertEquals("PATIENT", creado.getRol());
+        verify(usuarioRepository, times(1)).save(usuario);
+    }
+
+    @Test
+    void testListarUsuarios() {
+        List<Usuario> lista = Arrays.asList(usuario);
+        when(usuarioRepository.findAll()).thenReturn(lista);
+
+        List<Usuario> result = usuarioService.listarUsuarios();
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void testObtenerPorId() {
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
+
+        Optional<Usuario> result = usuarioService.obtenerPorId(1L);
+        assertTrue(result.isPresent());
+        assertEquals("Rodrigo", result.get().getNombre());
+    }
+
+    @Test
+    void testActualizarUsuario() {
         when(usuarioRepository.save(usuario)).thenReturn(usuario);
+        Usuario actualizado = usuarioService.actualizarUsuario(1L, usuario);
 
-        Usuario result = usuarioService.crearUsuario(usuario);
-
-        assertNotNull(result);
-        verify(usuarioRepository).save(usuario);
+        assertEquals(usuario, actualizado);
     }
 
     @Test
-    void listarUsuarios_ok() {
-        when(usuarioRepository.findAll()).thenReturn(List.of(new Usuario()));
-
-        List<Usuario> usuarios = usuarioService.listarUsuarios();
-
-        assertEquals(1, usuarios.size());
+    void testEliminarUsuario() {
+        doNothing().when(usuarioRepository).deleteById(1L);
+        usuarioService.eliminarUsuario(1L);
+        verify(usuarioRepository, times(1)).deleteById(1L);
     }
 
     @Test
-    void login_exitoso() {
-        Usuario usuario = new Usuario();
-        usuario.setEmail("test@test.com");
-        usuario.setPassword("1234");
-
-        when(usuarioRepository.findByEmailAndPassword("test@test.com", "1234"))
+    void testLoginExitoso() {
+        when(usuarioRepository.findByEmailAndPassword("rodri@test.com", "123456"))
                 .thenReturn(Optional.of(usuario));
 
-        Optional<Usuario> result = usuarioService.login("test@test.com", "1234");
-
+        Optional<Usuario> result = usuarioService.login("rodri@test.com", "123456");
         assertTrue(result.isPresent());
     }
 
     @Test
-    void login_fallido() {
-        when(usuarioRepository.findByEmailAndPassword("test@test.com", "wrong"))
+    void testLoginFallido() {
+        when(usuarioRepository.findByEmailAndPassword("rodri@test.com", "wrong"))
                 .thenReturn(Optional.empty());
 
-        Optional<Usuario> result = usuarioService.login("test@test.com", "wrong");
-
-        assertTrue(result.isEmpty());
+        Optional<Usuario> result = usuarioService.login("rodri@test.com", "wrong");
+        assertFalse(result.isPresent());
     }
 }

@@ -17,9 +17,17 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public Usuario crearUsuario(Usuario usuario) {
-        return usuarioRepository.save(usuario);
+public Usuario crearUsuario(Usuario usuario) {
+
+    // Valores por defecto del sistema
+    usuario.setEstado("ACTIVO");
+
+    if (usuario.getRol() == null || usuario.getRol().isBlank()) {
+        usuario.setRol("PATIENT");
     }
+
+    return usuarioRepository.save(usuario);
+}
 
     @Override
     public List<Usuario> listarUsuarios() {
